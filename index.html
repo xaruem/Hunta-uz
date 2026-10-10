@@ -148,6 +148,7 @@ h2{font-size:clamp(26px,4.4vw,44px);font-weight:600}
 .plan.premium{border-radius:22px 22px 22px 6px}
 .plan.pick{border:2px solid var(--ac);background:linear-gradient(160deg,rgba(0,255,136,.1),rgba(0,255,136,.02) 60%),var(--bg2);box-shadow:0 0 44px rgba(0,255,136,.12)}
 .badge{position:absolute;top:-14px;left:24px;background:var(--ac);color:#000;font-weight:800;font-size:13px;padding:5px 14px;border-radius:999px}
+.badge.tag{background:var(--bg);color:var(--ac);border:1px solid var(--ac)}
 .plan h3{font-size:18px;font-weight:600;color:var(--tx2)}
 .pr{margin:18px 0 4px;display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 12px}
 .pr .now{font-family:var(--display);font-weight:800;font-size:clamp(34px,4.2vw,46px);letter-spacing:-.05em;line-height:1;font-variant-numeric:tabular-nums}
@@ -156,14 +157,17 @@ h2{font-size:clamp(26px,4.4vw,44px);font-weight:600}
 .unit{color:var(--tx2);font-size:15px}
 .perday{margin-top:6px;font-size:14.5px;font-weight:700;color:var(--ac)}
 .roi{margin-top:4px;font-size:13.5px;color:var(--tx2)}
-.feat{margin:26px 0 30px;display:grid;gap:12px;flex:1}
-.feat li{display:flex;gap:10px;align-items:flex-start;font-size:15.5px}
-.feat svg{flex:none;width:18px;height:18px;margin-top:3px;color:var(--ac)}
+.lead-line{margin-top:22px;font-weight:700;font-size:15px;color:var(--tx)}
+.lead-line + .feat{margin-top:14px}
+.feat{margin:26px 0 30px;display:grid;gap:12px;flex:1;align-content:start}
+.feat li{display:flex;gap:10px;align-items:flex-start;font-size:15.5px;line-height:1.5}
+.plan-d{color:var(--tx2);font-size:14.5px;margin:-10px 0 24px}
 .plan .btn{width:100%}
 .plan:not(.pick) .btn{border-color:var(--bd);color:var(--tx)}
 .plan:not(.pick) .btn::before{background:var(--tx)}
 .plan:not(.pick) .btn:hover{color:#000}
 .plans-note{margin-top:22px;color:var(--tx2);font-size:14.5px}
+@media(min-width:861px){.plan.pick{transform:translateY(-10px)}}
 
 /* ---------- calculator ---------- */
 .calc{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:48px}
@@ -231,6 +235,7 @@ footer a:hover{color:var(--ac)}
   .proof li:first-child{border-top:0}
   .how-frame{grid-template-columns:1fr;gap:32px}
   .plans{grid-template-columns:1fr;gap:28px}
+  .plan.pick{order:-1}
   .calc,.sale{grid-template-columns:1fr}
   .faq details p{padding-right:8px}
   .cta .btn{width:100%}
@@ -239,12 +244,13 @@ footer a:hover{color:var(--ac)}
     transform:translateY(110%);transition:transform .4s var(--ease)}
   .sticky.show{transform:none}
   .sticky span{font-weight:700;font-size:14px;line-height:1.25}
-  .sticky .btn{padding:12px 20px;font-size:15px;white-space:nowrap}
+  .sticky .btn{padding:12px 18px;font-size:14.5px;white-space:nowrap}
   footer{padding-bottom:90px}
 }
 @media (max-width:420px){
   .bar{font-size:12.5px}
   .lang button{min-width:40px;padding:4px 9px}
+  .sticky .btn{padding:11px 14px;font-size:13.5px}
 }
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
@@ -368,6 +374,7 @@ footer a:hover{color:var(--ac)}
             <div class="res-n"><span id="income">3 000 000</span><small data-i="som"></small></div>
             <p class="res-p" id="startShare"></p>
             <p class="res-p" id="payback"></p>
+            <p class="res-p" id="payPrem"></p>
           </div>
           <p class="fine" data-i="c_fine"></p>
         </div>
@@ -438,7 +445,7 @@ footer a:hover{color:var(--ac)}
 
 <div class="sticky" id="sticky">
   <span id="stickyText"></span>
-  <a class="btn btn-p" href="#plans" data-i="cta_plans"></a>
+  <a class="btn btn-p" href="#plans" data-i="cta_prem"></a>
 </div>
 
 <script>
@@ -454,11 +461,11 @@ var CFG = {
   tzOffsetHours: 5,                 // Ташкент, UTC+5
   fridayDiscount: 0.30,             // каждую пятницу
   holidayDiscount: 0.50,            // священные праздники
-  // Порядок важен: сначала самый дорогой тариф — это и есть «якорь»
+  // Порядок: от дешёвого к дорогому. pick — главный тариф (Премиум), tag — «Оптимальный выбор»
   plans: [
-    { id:'premium', price:100000 },
-    { id:'pro',     price:60000  },
-    { id:'start',   price:30000, pick:true }
+    { id:'simple',   price:30000 },
+    { id:'standard', price:60000,  tag:true },
+    { id:'premium',  price:100000, pick:true }
   ],
   // Даты праздников. В Узбекистане их официально утверждают за несколько дней — уточняйте.
   holidays: [
@@ -474,8 +481,8 @@ var T = {
 ru:{
   title:'Hunta — заказы для фрилансеров',
   h1:'Лови заказы раньше других',
-  lead:'Hunta — платформа, где заказчики оставляют задачи, а фрилансеры берут их в работу. Выберите тариф и получайте заказы через Telegram.',
-  cta_plans:'Выбрать тариф', cta_how:'Как это работает',
+  lead:'Hunta — платформа, где заказчики оставляют задачи, а фрилансеры берут их в работу. Выберите тариф и получайте заявки через Telegram.',
+  cta_plans:'Выбрать тариф', cta_how:'Как это работает', cta_prem:'Премиум: заявки первым',
   chips:['Логотип','Сайт','Перевод','SMM','Telegram-бот','Видеомонтаж','Копирайтинг'],
   field_note:'Примеры задач на платформе',
   p1:'клиентов довольны', p2n:'от 3 млн', p2:'сум в месяц — заработок наших клиентов*', p3n:'4 шага', p3:'от регистрации до первого заказа',
@@ -498,13 +505,31 @@ ru:{
     ]
   },
   plans_t:'Выберите тариф',
-  plans_s:'Чем раньше вы подключитесь, тем больше заказов успеете взять.',
+  plans_s:'Чем быстрее приходят заявки, тем чаще заказ достаётся именно вам.',
   plan:{
-    premium:{n:'Premium', f:['Всё из тарифа Pro','Безлимитные отклики','Топ-позиции в выдаче','Личный менеджер']},
-    pro:{n:'Pro', f:['Всё из тарифа Start','До 60 откликов в месяц','Приоритет в выдаче','Значок «Проверен»']},
-    start:{n:'Start', f:['Профиль и портфолио','Заказы из бота @Huntaklientbot','До 20 откликов в месяц','Безопасная оплата (эскроу)']}
+    simple:{
+      n:'Простой',
+      lead:'',
+      f:['🗂 1 канал заявок вашего направления','⏱ Заявки приходят через 5 мин','🌐 Профиль на сайте hunta.uz'],
+      d:'Подходит, чтобы попробовать и начать получать заявки.'
+    },
+    standard:{
+      n:'Стандарт',
+      lead:'Всё из «Простого» +',
+      f:['🗂 До 3 каналов заявок — несколько направлений сразу','⚡ Заявки вам в личку уже через 1 мин — на 4 мин раньше «Простого»'],
+      d:''
+    },
+    premium:{
+      n:'Премиум',
+      lead:'Всё из «Стандарта» +',
+      f:['🗂 До 5 каналов заявок',
+         '🚀 Заявки вам в личку сразу — вы первый, кто успевает ответить заказчику',
+         '⭐ Ваша анкета на сайте всегда в топе списка — с бейджем Premium и кнопкой «Связаться»',
+         '📢 Пост о вас в нашем Instagram раз в месяц (если ведёте блог)'],
+      d:''
+    }
   },
-  badge:'Лучшее для старта', unit:'сум / месяц',
+  badge:'👑 Максимум заявок', badge_tag:'🔥 Оптимальный выбор', unit:'сум / месяц',
   perday:function(n){return '≈ '+n+' сум в день'},
   roi:function(p){return 'Это '+p+'% от дохода в 3 млн сум*'},
   choose:function(n){return 'Выбрать '+n},
@@ -514,12 +539,15 @@ ru:{
   calc_t:'Посчитайте свой заработок',
   c_orders:'Заказов в месяц', c_check:'Средний чек, сум', c_income:'Ваш доход за месяц', som:'сум',
   c_fine:'Пример расчёта, а не гарантия дохода. Реальный результат зависит от ниши, портфолио и активности.',
-  share:function(p){return 'Тариф Start — это всего '+p+'% этой суммы.'},
-  payback_one:'Один заказ с таким чеком окупает тариф Start.',
-  payback_many:function(n){return 'Тариф Start окупится за '+n+' заказа(ов).'},
+  share:function(p){return 'Тариф «Простой» — это всего '+p+'% этой суммы.'},
+  payback_one:'Один заказ с таким чеком окупает тариф «Простой».',
+  payback_many:function(n){return 'Тариф «Простой» окупится за '+n+' заказа(ов).'},
+  pay_prem:function(n){return n<=1
+    ? 'Один заказ с таким чеком окупает и Премиум — а заявки вы получаете первым.'
+    : 'Премиум окупится за '+n+' заказа(ов) — а заявки вы получаете первым.'},
   loss_t:'Сколько стоит ожидание',
   loss_s:'Заказы приходят каждый день, а берёт их тот, кто уже на платформе. Пока вы думаете, заказчики выбирают других.',
-  loss_day:'Каждый день без Hunta — примерно', 
+  loss_day:'Каждый день без Hunta — примерно',
   loss_week:function(n){return 'За неделю промедления — около '+n+' сум упущенного дохода.'},
   loss_btn:'Не терять время — выбрать тариф',
   sale_t:'Скидки, на которые можно рассчитывать',
@@ -528,15 +556,17 @@ ru:{
   hol_t:'В священные праздники', hol_p:'Скидка до 50% в дни Рамазон хайит, Курбан хайит и других священных праздников.',
   st_on:'Действует сейчас', st_fri_off:'Следующая — в пятницу', st_hol_off:'Не сегодня',
   next_hol:function(n,d){return 'Ближайший праздник: '+n+' ('+d+'). Точная дата утверждается официально.'},
-  bar_wait:function(p){return 'Пятничная скидка −'+p+'% начнётся через'},
-  bar_fri:function(p){return 'Сегодня пятница: скидка −'+p+'% на все тарифы. Закончится через'},
-  bar_hol:function(p,n){return 'Праздничная скидка −'+p+'% — '+n+'. Закончится через'},
-  sticky_none:'Заказы берут уже сейчас', sticky_fri:function(p){return 'Пятница: −'+p+'% сегодня'}, sticky_hol:function(p){return 'Праздничная скидка −'+p+'%'},
+  bar_wait:function(a,b){return 'Пятница: Премиум за '+a+' сум вместо '+b+' — начнётся через'},
+  bar_fri:function(a,b){return 'Сегодня пятница: Премиум за '+a+' сум вместо '+b+'. Закончится через'},
+  bar_hol:function(a,b,n){return n+': Премиум за '+a+' сум вместо '+b+'. Закончится через'},
+  sticky_none:'Отвечайте заказчику первым',
+  sticky_fri:function(a){return 'Премиум за '+a+' сегодня'},
+  sticky_hol:function(a){return 'Премиум за '+a+' в праздник'},
   faq_t:'Частые вопросы',
   faq:[
     ['С чего начать?','Напишите администратору @huntaadmin — он поможет выбрать тариф и подключиться. Заказы приходят через бота @Huntaklientbot.'],
     ['Как я получаю оплату?','Заказчик переводит сумму в безопасное хранилище (эскроу), и она заблокирована до завершения работы. После подтверждения результата деньги уходят вам.'],
-    ['Как выбрать тариф?','Начните с Start — это самый доступный вариант. Если сомневаетесь, напишите администратору: он подскажет, что подойдёт под вашу нишу.'],
+    ['Как выбрать тариф?','«Простой» — чтобы попробовать. «Стандарт» — оптимальный выбор для нескольких направлений. «Премиум» — для тех, кто хочет отвечать заказчику первым: заявки приходят сразу, а анкета всегда в топе.'],
     ['Как работают скидки?','Каждую пятницу цены ниже до 30%, а в священные праздники — до 50%. Новая цена появляется на карточках тарифов автоматически.']
   ],
   fin_t:'Пока вы думаете, заказы разбирают другие',
@@ -546,8 +576,8 @@ ru:{
 uz:{
   title:'Hunta — frilanserlar uchun buyurtmalar',
   h1:'Buyurtmalarni boshqalardan oldin qo‘lga kiriting',
-  lead:'Hunta — buyurtmachilar vazifa qoldiradigan, frilanserlar esa ularni ishga oladigan platforma. Tarifni tanlang va buyurtmalarni Telegram orqali qabul qiling.',
-  cta_plans:'Tarifni tanlash', cta_how:'Qanday ishlaydi',
+  lead:'Hunta — buyurtmachilar vazifa qoldiradigan, frilanserlar esa ularni ishga oladigan platforma. Tarifni tanlang va arizalarni Telegram orqali qabul qiling.',
+  cta_plans:'Tarifni tanlash', cta_how:'Qanday ishlaydi', cta_prem:'Premium: birinchi bo‘ling',
   chips:['Logotip','Sayt','Tarjima','SMM','Telegram-bot','Video montaj','Kopirayting'],
   field_note:'Platformadagi vazifalar namunasi',
   p1:'mijozlarimiz mamnun', p2n:'3 mln dan', p2:'so‘m oyiga — mijozlarimiz daromadi*', p3n:'4 qadam', p3:'ro‘yxatdan birinchi buyurtmagacha',
@@ -565,18 +595,36 @@ uz:{
     cust:[
       ['Vazifani yozing','Nima kerakligini, muddat va byudjetni ko‘rsating — qancha aniq bo‘lsa, shuncha yaxshi.'],
       ['Takliflarni ko‘rib chiqing','Frilanserlarning narx va muddat takliflarini portfolio bilan solishtiring.'],
-      ['Mutaxassisni tanlang','Summa xavfsiz saqlash xizmatiga (escrow) o‘tadi va ish tugagunча qulflangan turadi.'],
+      ['Mutaxassisni tanlang','Summa xavfsiz saqlash xizmatiga (escrow) o‘tadi va ish tugaguncha qulflangan turadi.'],
       ['Natijani qabul qiling','Ishni tekshirib tasdiqlaganingizdan so‘ng to‘lov frilanserga chiqariladi.']
     ]
   },
   plans_t:'Tarifni tanlang',
-  plans_s:'Qancha erta ulansangiz, shuncha ko‘p buyurtma olishga ulgurasiz.',
+  plans_s:'Arizalar qancha tez kelsa, buyurtma shuncha tez-tez sizga tushadi.',
   plan:{
-    premium:{n:'Premium', f:['Pro tarifidagi hamma narsa','Cheksiz takliflar','Qidiruvda eng yuqori o‘rinlar','Shaxsiy menejer']},
-    pro:{n:'Pro', f:['Start tarifidagi hamma narsa','Oyiga 60 tagacha taklif','Qidiruvda ustuvorlik','«Tekshirilgan» belgisi']},
-    start:{n:'Start', f:['Profil va portfolio','@Huntaklientbot botidan buyurtmalar','Oyiga 20 tagacha taklif','Xavfsiz to‘lov (escrow)']}
+    simple:{
+      n:'Oddiy',
+      lead:'',
+      f:['🗂 Yo‘nalishingiz bo‘yicha 1 ta ariza kanali','⏱ Arizalar 5 daqiqadan so‘ng keladi','🌐 hunta.uz saytida profil'],
+      d:'Sinab ko‘rish va arizalar olishni boshlash uchun mos.'
+    },
+    standard:{
+      n:'Standart',
+      lead:'«Oddiy»dagi hamma narsa +',
+      f:['🗂 3 tagacha ariza kanali — bir vaqtda bir nechta yo‘nalish','⚡ Arizalar shaxsiy xabaringizga 1 daqiqadan so‘ng — «Oddiy»dan 4 daqiqa oldin'],
+      d:''
+    },
+    premium:{
+      n:'Premium',
+      lead:'«Standart»dagi hamma narsa +',
+      f:['🗂 5 tagacha ariza kanali',
+         '🚀 Arizalar shaxsiy xabaringizga darhol — buyurtmachiga birinchi javob beradigan siz bo‘lasiz',
+         '⭐ Saytdagi anketangiz doim ro‘yxat tepasida — Premium belgisi va «Bog‘lanish» tugmasi bilan',
+         '📢 Instagram sahifamizda oyiga bir marta siz haqingizda post (agar blog yuritsangiz)'],
+      d:''
+    }
   },
-  badge:'Boshlash uchun eng yaxshisi', unit:'so‘m / oy',
+  badge:'👑 Maksimal arizalar', badge_tag:'🔥 Eng maqbul tanlov', unit:'so‘m / oy',
   perday:function(n){return 'kuniga ≈ '+n+' so‘m'},
   roi:function(p){return '3 mln so‘m daromadning '+p+'% i*'},
   choose:function(n){return n+' ni tanlash'},
@@ -586,9 +634,12 @@ uz:{
   calc_t:'Daromadingizni hisoblang',
   c_orders:'Oyiga buyurtmalar', c_check:'O‘rtacha chek, so‘m', c_income:'Oylik daromadingiz', som:'so‘m',
   c_fine:'Bu hisob-kitob namunasi, daromad kafolati emas. Natija yo‘nalish, portfolio va faollikka bog‘liq.',
-  share:function(p){return 'Start tarifi bu summaning atigi '+p+'% i.'},
-  payback_one:'Shunday chekdagi bitta buyurtma Start tarifini qoplaydi.',
-  payback_many:function(n){return 'Start tarifi '+n+' ta buyurtmada o‘zini qoplaydi.'},
+  share:function(p){return '«Oddiy» tarifi bu summaning atigi '+p+'% i.'},
+  payback_one:'Shunday chekdagi bitta buyurtma «Oddiy» tarifini qoplaydi.',
+  payback_many:function(n){return '«Oddiy» tarifi '+n+' ta buyurtmada o‘zini qoplaydi.'},
+  pay_prem:function(n){return n<=1
+    ? 'Shunday chekdagi bitta buyurtma Premiumni ham qoplaydi — arizalarni esa birinchi bo‘lib olasiz.'
+    : 'Premium '+n+' ta buyurtmada o‘zini qoplaydi — arizalarni esa birinchi bo‘lib olasiz.'},
   loss_t:'Kutishning narxi qancha',
   loss_s:'Buyurtmalar har kuni keladi, uni esa platformada allaqachon turgan kishi oladi. Siz o‘ylayotganda buyurtmachilar boshqalarni tanlaydi.',
   loss_day:'Hunta’siz har bir kun — taxminan',
@@ -600,15 +651,17 @@ uz:{
   hol_t:'Muqaddas bayramlarda', hol_p:'Ramazon hayit, Qurbon hayit va boshqa muqaddas bayramlarda 50% gacha chegirma.',
   st_on:'Hozir amalda', st_fri_off:'Keyingisi — juma kuni', st_hol_off:'Bugun emas',
   next_hol:function(n,d){return 'Eng yaqin bayram: '+n+' ('+d+'). Aniq sana rasman e’lon qilinadi.'},
-  bar_wait:function(p){return 'Juma chegirmasi −'+p+'% boshlanishiga'},
-  bar_fri:function(p){return 'Bugun juma: barcha tariflarga −'+p+'% chegirma. Tugashiga'},
-  bar_hol:function(p,n){return 'Bayram chegirmasi −'+p+'% — '+n+'. Tugashiga'},
-  sticky_none:'Buyurtmalar hozir olinmoqda', sticky_fri:function(p){return 'Juma: bugun −'+p+'%'}, sticky_hol:function(p){return 'Bayram chegirmasi −'+p+'%'},
+  bar_wait:function(a,b){return 'Juma: Premium '+b+' o‘rniga '+a+' so‘m — boshlanishiga'},
+  bar_fri:function(a,b){return 'Bugun juma: Premium '+b+' o‘rniga '+a+' so‘m. Tugashiga'},
+  bar_hol:function(a,b,n){return n+': Premium '+b+' o‘rniga '+a+' so‘m. Tugashiga'},
+  sticky_none:'Buyurtmachiga birinchi javob bering',
+  sticky_fri:function(a){return 'Premium bugun '+a+' so‘m'},
+  sticky_hol:function(a){return 'Bayramda Premium '+a+' so‘m'},
   faq_t:'Ko‘p so‘raladigan savollar',
   faq:[
     ['Qayerdan boshlash kerak?','@huntaadmin administratoriga yozing — u tarif tanlash va ulanishda yordam beradi. Buyurtmalar @Huntaklientbot boti orqali keladi.'],
-    ['To‘lovni qanday olaman?','Buyurtmachi summani xavfsiz saqlash xizmatiga (escrow) o‘tkazadi va u ish tugagunча qulflangan turadi. Natija tasdiqlangach, pul sizga chiqariladi.'],
-    ['Tarifni qanday tanlayman?','Start dan boshlang — bu eng hamyonbop variant. Shubhangiz bo‘lsa, administratorga yozing: u yo‘nalishingizga mosini aytadi.'],
+    ['To‘lovni qanday olaman?','Buyurtmachi summani xavfsiz saqlash xizmatiga (escrow) o‘tkazadi va u ish tugaguncha qulflangan turadi. Natija tasdiqlangach, pul sizga chiqariladi.'],
+    ['Tarifni qanday tanlayman?','«Oddiy» — sinab ko‘rish uchun. «Standart» — bir nechta yo‘nalish uchun eng maqbul. «Premium» — buyurtmachiga birinchi javob berishni istaganlar uchun: arizalar darhol keladi, anketa esa doim tepada.'],
     ['Chegirmalar qanday ishlaydi?','Har juma kuni narxlar 30% gacha, muqaddas bayramlarda esa 50% gacha arzon. Yangi narx tarif kartalarida avtomatik ko‘rinadi.']
   ],
   fin_t:'Siz o‘ylayotganda buyurtmalarni boshqalar olmoqda',
@@ -628,6 +681,13 @@ var lang = 'ru';
 try { if (localStorage.getItem('hunta_lang') === 'uz') lang = 'uz'; } catch(e){}
 var role = 'free';
 var lastMode = null;
+
+// цена Премиума с учётом скидки (rate = 0 — без скидки)
+function premPrice(rate){
+  var p = 0;
+  CFG.plans.forEach(function(x){ if (x.id === 'premium') p = x.price; });
+  return rate ? Math.round(p*(1-rate)/1000)*1000 : p;
+}
 
 /* =====================================================
    СКИДКИ: пятница (по Ташкенту) и праздники
@@ -676,8 +736,6 @@ function fmtLeft(ms){
 /* =====================================================
    РЕНДЕР
    ===================================================== */
-var CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.500"/></svg>';
-
 function renderStatic(){
   var t = T[lang];
   document.documentElement.lang = lang;
@@ -730,14 +788,17 @@ function renderPlans(){
     art.className = 'plan ' + pl.id + (pl.pick ? ' pick' : '');
     var html = '';
     if (pl.pick) html += '<span class="badge">'+t.badge+'</span>';
+    else if (pl.tag) html += '<span class="badge tag">'+t.badge_tag+'</span>';
     html += '<h3>'+info.n+'</h3>';
     html += '<div class="pr"><span class="now">'+fmt(now)+'</span>';
     if (st.rate) html += '<span class="old">'+fmt(pl.price)+'</span>';
     html += '</div><div class="unit">'+t.unit+'</div>';
-    html += '<div class="perday">'+t.perday(fmt(now/30))+'</div>';
+    html += '<div class="perday">'+t.perday(fmt(Math.round(now/30/100)*100))+'</div>';
     var share = (pl.price/3000000*100).toFixed(1).replace('.',',').replace(',0','');
     html += '<div class="roi">'+t.roi(share)+'</div>';
-    html += '<ul class="feat">'+info.f.map(function(f){return '<li>'+CHECK+'<span>'+f+'</span></li>'}).join('')+'</ul>';
+    if (info.lead) html += '<div class="lead-line">'+info.lead+'</div>';
+    html += '<ul class="feat">'+info.f.map(function(f){return '<li><span>'+f+'</span></li>'}).join('')+'</ul>';
+    if (info.d) html += '<p class="plan-d">'+info.d+'</p>';
     html += '<a class="btn '+(pl.pick?'btn-p':'btn-s')+'" href="'+CFG.bot+'" target="_blank" rel="noopener">'+t.choose(info.n)+'</a>';
     art.innerHTML = html;
     box.appendChild(art);
@@ -749,9 +810,13 @@ function renderPlans(){
 }
 
 function renderSale(force){
-  var t = T[lang], st = saleState(), pc = Math.round(st.rate*100);
+  var t = T[lang], st = saleState();
   var bar = $('#bar');
-  var text = st.mode==='friday' ? t.bar_fri(pc) : st.mode==='holiday' ? t.bar_hol(pc, st.hol[lang]) : t.bar_wait(Math.round(CFG.fridayDiscount*100));
+  var old = fmt(premPrice(0));
+  var nowP = fmt(premPrice(st.rate));
+  var text = st.mode==='friday' ? t.bar_fri(nowP, old)
+    : st.mode==='holiday' ? t.bar_hol(nowP, old, st.hol[lang])
+    : t.bar_wait(fmt(premPrice(CFG.fridayDiscount)), old);
   $('#barText').textContent = text;
   $('#barTimer').textContent = fmtLeft(st.left);
   bar.classList.toggle('live', st.mode!=='none');
@@ -764,7 +829,7 @@ function renderSale(force){
   $('#holNext').textContent = nh ? t.next_hol(nh[lang], lang==='ru'?nh.dru:nh.duz) : '';
 
   var s = $('#stickyText');
-  s.textContent = st.mode==='friday' ? t.sticky_fri(pc) : st.mode==='holiday' ? t.sticky_hol(pc) : t.sticky_none;
+  s.textContent = st.mode==='friday' ? t.sticky_fri(nowP) : st.mode==='holiday' ? t.sticky_hol(nowP) : t.sticky_none;
 
   if (lastMode !== st.mode && !force){ renderPlans(); }
   lastMode = st.mode;
@@ -782,6 +847,7 @@ function renderCalc(){
   var share = (startPrice/income*100);
   $('#startShare').textContent = t.share((share<10 ? share.toFixed(1) : Math.round(share)).toString().replace('.',',').replace(',0',''));
   $('#payback').textContent = c >= startPrice ? t.payback_one : t.payback_many(Math.ceil(startPrice/c));
+  $('#payPrem').textContent = t.pay_prem(Math.ceil(premPrice(0)/c));
   $('#perDay').textContent = fmt(income/30);
   $('#perWeek').textContent = t.loss_week(fmt(income/30*7));
 }
